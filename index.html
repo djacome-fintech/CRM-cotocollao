@@ -525,10 +525,12 @@
           <select id="f-oficina">
             <option value="">Seleccione...</option>
             <option>Matriz Cotocollao</option>
-            <option>Agencia Norte</option>
+            <option>Agencia SanAntonio</option>
             <option>Agencia Sur</option>
             <option>Agencia Centro</option>
-            <option>Agencia Valle</option>
+            <option>Agencia Sangolquí</option>
+            <option>Agencia Pomasquí</option>
+            <option>Agencia Calderon</option>
           </select>
         </div>
         <div class="form-group">
@@ -862,7 +864,7 @@ function initListaFilters() {
     o.value=e.key; o.textContent=e.key;
     estadoSel.appendChild(o);
   });
-  const offs = ['Matriz Cotocollao','Agencia Norte','Agencia Sur','Agencia Centro','Agencia Valle'];
+  const offs = ['Matriz Cotocollao','Agencia SanAntonio','Agencia Calderon','Agencia Pomasqui','Agencia Sur','Agencia Centro','Agencia Sangolqui'];
   const ofSel = document.getElementById('filter-oficina');
   offs.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;ofSel.appendChild(op);});
   const tipos = ['MIC24','CrediROL','Micro Crédito Empresarial','Crédito Agrícola','Consumo Ordinario','Vivienda'];
