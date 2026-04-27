@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CRM de Solicitudes de Crédito - Cooperativa de Ahorro y Crédito Cotocollao Ltda.">
+<title>CRM Créditos - Cooperativa Cotocollao</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23E8650A'/%3E%3Ctext x='50' y='62' font-family='Arial' font-size='40' font-weight='bold' fill='white' text-anchor='middle'%3ECC%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --cot-orange: #E8650A;
+    --cot-orange-dark: #C4540A;
+    --cot-orange-light: #FFF0E6;
+    --cot-orange-mid: #F5A46A;
+    --sidebar-w: 220px;
+    --header-h: 56px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: #F5F4F1; font-size: 13px; color: #1A1A2E; }
+
+  #app { display: flex; height: 100vh; }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: var(--sidebar-w); background: #1A1A2E; color: #CCC;
+    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  }
+  #sidebar .brand {
+    padding: 16px; background: var(--cot-orange);
+    display: flex; align-items: center; gap: 10px;
+  }
+  #sidebar .brand .logo-circle {
+    width: 32px; height: 32px; border-radius: 50%; background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 12px; color: var(--cot-orange);
+  }
+  #sidebar .brand span { font-size: 13px; font-weight: 600; color: white; line-height: 1.2; }
+  #sidebar nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  #sidebar nav .nav-section { padding: 14px 16px 4px; font-size: 9px; letter-spacing: 1px; color: #666; text-transform: uppercase; }
+  #sidebar nav .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s;
+    color: #AAA; font-size: 13px;
+  }
+  #sidebar nav .nav-item:hover { background: rgba(255,255,255,0.05); color: #EEE; }
+  #sidebar nav .nav-item.active { background: rgba(232,101,10,0.15); border-left-color: var(--cot-orange); color: white; }
+  #sidebar nav .nav-item .ic { font-size: 15px; width: 18px; text-align: center; }
+  #sidebar .user-badge {
+    padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  #sidebar .user-badge .av {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--cot-orange);
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white;
+  }
+  #sidebar .user-badge .info { flex: 1; overflow: hidden; }
+  #sidebar .user-badge .info .name { font-size: 12px; color: #DDD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #sidebar .user-badge .info .role { font-size: 10px; color: #888; }
+  #sidebar .logout-btn {
+    background: transparent; border: 0.5px solid rgba(255,255,255,0.15); color: #AAA;
+    padding: 5px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;
+  }
+  #sidebar .logout-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+
+  /* MAIN */
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #topbar {
+    height: var(--header-h); background: white; border-bottom: 0.5px solid #E0E0E0;
+    display: flex; align-items: center; padding: 0 24px; gap: 14px;
+  }
+  #topbar h1 { font-size: 16px; font-weight: 600; color: #1A1A2E; flex: 1; }
+  #topbar .badge-count {
+    background: var(--cot-orange-light); color: var(--cot-orange-dark);
+    font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+  }
+  #topbar .btn-primary {
+    background: var(--cot-orange); color: white; border: none;
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  #topbar .btn-primary:hover { background: var(--cot-orange-dark); }
+
+  #content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* LOGIN */
+  #screen-login {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  #screen-login.active { display: flex; }
+  .login-card {
+    background: white; border-radius: 12px; padding: 40px; width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-card .login-logo {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--cot-orange);
+    margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 22px; color: white;
+  }
+  .login-card h2 { text-align: center; font-size: 18px; color: #1A1A2E; margin-bottom: 4px; }
+  .login-card p { text-align: center; font-size: 12px; color: #888; margin-bottom: 24px; }
+  .login-card label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 5px; margin-top: 14px; }
+  .login-card input, .login-card select {
+    width: 100%; padding: 10px 12px; border: 0.5px solid #DDD; border-radius: 6px;
+    font-size: 13px; outline: none;
+  }
+  .login-card input:focus, .login-card select:focus { border-color: var(--cot-orange); }
+  .login-card .btn-login {
+    width: 100%; margin-top: 22px; padding: 12px; background: var(--cot-orange);
+    color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .login-card .btn-login:hover { background: var(--cot-orange-dark); }
+  .login-card .demo-hint { font-size: 10px; color: #AAA; text-align: center; margin-top: 14px; }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat-card {
+    background: white; border-radius: 8px; padding: 16px 18px;
+    border: 0.5px solid #E8E8E8;
+  }
+  .stat-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-card .value { font-size: 24px; font-weight: 600; color: #1A1A2E; }
+  .stat-card .sub { font-size: 11px; color: #AAA; margin-top: 3px; }
+  .stat-card.orange .value { color: var(--cot-orange); }
+  .stat-card.green .value { color: #2E7D32; }
+  .stat-card.red .value { color: #C62828; }
+
+  /* PIPELINE KANBAN */
+  .kanban-wrap { overflow-x: auto; padding-bottom: 16px; }
+  .kanban { display: flex; gap: 12px; min-width: max-content; }
+  .kol {
+    width: 190px; flex-shrink: 0;
+    background: #F0EEE8; border-radius: 8px; padding: 10px;
+  }
+  .kol-head {
+    display: flex; align-items: center; gap: 7px; margin-bottom: 10px; padding: 4px 2px;
+  }
+  .kol-head .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .kol-head .kol-title { font-size: 12px; font-weight: 600; color: #333; }
+  .kol-head .kol-count {
+    margin-left: auto; background: rgba(0,0,0,0.08);
+    font-size: 10px; padding: 2px 7px; border-radius: 10px; color: #555; font-weight: 600;
+  }
+  .kcard {
+    background: white; border-radius: 6px; padding: 10px; margin-bottom: 7px;
+    border: 0.5px solid #E5E5E5; cursor: pointer;
+  }
+  .kcard:hover { border-color: var(--cot-orange); transform: translateY(-1px); }
+  .kcard .kc-name { font-size: 12px; font-weight: 600; color: #1A1A2E; margin-bottom: 3px; }
+  .kcard .kc-type { font-size: 10px; color: #888; }
+  .kcard .kc-amount { font-size: 13px; color: var(--cot-orange); font-weight: 600; margin-top: 5px; }
+  .kcard .kc-asesor { font-size: 10px; color: #AAA; margin-top: 3px; }
+
+  /* LISTA DE SOLICITUDES */
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar input, .filter-bar select {
+    padding: 8px 12px; border: 0.5px solid #DDD; border-radius: 6px;
+    font-size: 13px; outline: none; background: white;
+  }
+  .filter-bar input { flex: 1; min-width: 200px; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--cot-orange); }
+
+  .table-wrap { background: white; border-radius: 8px; border: 0.5px solid #E8E8E8; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #F8F7F4; font-size: 10px; font-weight: 600; color: #666;
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left;
+    border-bottom: 0.5px solid #E8E8E8; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 0.5px solid #F0F0F0; cursor: pointer; }
+  tbody tr:hover { background: #FFF8F4; }
+  tbody td { padding: 11px 14px; font-size: 12px; color: #333; }
+  .status-pill {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; white-space: nowrap;
+  }
+
+  /* STATUS COLORS */
+  .s-prospecto { background: #EEF2FF; color: #3949AB; }
+  .s-solicitud { background: #E3F2FD; color: #1565C0; }
+  .s-validacion { background: #FFF8E1; color: #E65100; }
+  .s-verificacion { background: #FFF3E0; color: #BF360C; }
+  .s-fabrica { background: #F3E5F5; color: #6A1B9A; }
+  .s-devuelto { background: #FCE4EC; color: #880E4F; }
+  .s-aprobacion { background: #E8F5E9; color: #2E7D32; }
+  .s-rechazado { background: #FFEBEE; color: #B71C1C; }
+  .s-desembolso { background: #C8E6C9; color: #1B5E20; font-weight: 700; }
+
+  /* MODAL */
+  #modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+    padding: 20px;
+  }
+  #modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 10px; width: 560px; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    padding: 18px 22px; border-bottom: 0.5px solid #EEE;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: white; z-index: 1;
+  }
+  .modal-header h3 { font-size: 15px; font-weight: 600; color: #1A1A2E; }
+  .modal-header .close-btn { cursor: pointer; color: #AAA; font-size: 22px; line-height: 1; padding: 0 6px; }
+  .modal-header .close-btn:hover { color: #555; }
+  .modal-body { padding: 22px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: #555; }
+  .form-group label .req { color: var(--cot-orange); margin-left: 2px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 11px; border: 0.5px solid #DDD; border-radius: 6px;
+    font-size: 13px; outline: none; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--cot-orange); }
+  .form-group .err { color: #C62828; font-size: 10px; }
+  .modal-footer {
+    padding: 16px 22px; border-top: 0.5px solid #EEE;
+    display: flex; gap: 10px; justify-content: space-between; align-items: center;
+    position: sticky; bottom: 0; background: white;
+  }
+  .modal-footer .left-actions { display: flex; gap: 8px; }
+  .modal-footer .right-actions { display: flex; gap: 8px; }
+  .btn-secondary {
+    padding: 9px 16px; border: 0.5px solid #DDD; border-radius: 6px;
+    background: white; font-size: 13px; cursor: pointer; color: #555;
+  }
+  .btn-secondary:hover { background: #F8F7F4; }
+  .btn-primary2 {
+    padding: 9px 18px; background: var(--cot-orange); color: white;
+    border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary2:hover { background: var(--cot-orange-dark); }
+  .btn-danger {
+    padding: 9px 14px; background: white; color: #C62828;
+    border: 0.5px solid #FFCDD2; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  .btn-danger:hover { background: #FFEBEE; }
+
+  /* HISTORIAL */
+  .historial { margin-top: 18px; padding-top: 14px; border-top: 0.5px dashed #DDD; }
+  .historial h4 { font-size: 11px; font-weight: 600; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .hist-item {
+    display: flex; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid #F0F0F0; align-items: flex-start;
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cot-orange); flex-shrink: 0; margin-top: 5px; }
+  .hist-text { font-size: 11px; color: #555; }
+  .hist-date { font-size: 10px; color: #AAA; margin-top: 2px; }
+
+  /* REPORTES */
+  .report-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .btn-export {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 16px; background: #2E7D32; color: white;
+    border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-export:hover { background: #1B5E20; }
+
+  /* ADMIN */
+  .admin-section { background: white; border-radius: 8px; border: 0.5px solid #E8E8E8; margin-bottom: 16px; overflow: hidden; }
+  .admin-section-head {
+    padding: 14px 18px; background: #F8F7F4; border-bottom: 0.5px solid #EEE;
+    font-size: 13px; font-weight: 600; color: #333;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-section-body { padding: 18px; }
+
+  /* TOASTS */
+  #toast-container { position: fixed; top: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: #1A1A2E; color: white; padding: 12px 18px; border-radius: 6px;
+    font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    animation: slideIn 0.25s ease-out;
+  }
+  .toast.success { background: #2E7D32; }
+  .toast.error { background: #C62828; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    #sidebar { width: 60px; }
+    #sidebar .brand span, #sidebar nav .nav-item span:not(.ic), #sidebar .user-badge .info, #sidebar nav .nav-section { display: none; }
+    #content { padding: 14px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .modal { width: 100%; }
+  }
+
+  .scroll-hint { font-size: 11px; color: #AAA; text-align: right; margin-bottom: 8px; }
+  .empty-state { padding: 40px; text-align: center; color: #AAA; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login" class="active">
+  <div class="login-card">
+    <div class="login-logo">CC</div>
+    <h2>CRM Créditos Cotocollao</h2>
+    <p>Sistema de Gestión de Solicitudes</p>
+    <label>Usuario</label>
+    <input type="text" id="login-user" placeholder="usuario.apellido" value="danilo.jacome">
+    <label>Contraseña</label>
+    <input type="password" id="login-pass" placeholder="••••••••" value="admin123">
+    <label>Rol</label>
+    <select id="login-role">
+      <option value="admin">Administrador</option>
+      <option value="asesor">Asesor de Crédito</option>
+      <option value="jefe">Jefe de Agencia</option>
+    </select>
+    <button class="btn-login" onclick="doLogin()">Ingresar al Sistema</button>
+    <p class="demo-hint">Demo: cualquier usuario / contraseña funciona</p>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app" style="display:none;">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="brand">
+      <div class="logo-circle">CC</div>
+      <span>Cooperativa<br>Cotocollao</span>
+    </div>
+    <nav>
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="showScreen('dashboard')" id="nav-dashboard">
+        <span class="ic">⬛</span> <span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('kanban')" id="nav-kanban">
+        <span class="ic">▦</span> <span>Pipeline</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('lista')" id="nav-lista">
+        <span class="ic">☰</span> <span>Solicitudes</span>
+      </div>
+      <div class="nav-section">Reportes</div>
+      <div class="nav-item" onclick="showScreen('reportes')" id="nav-reportes">
+        <span class="ic">↓</span> <span>Exportar</span>
+      </div>
+      <div class="nav-section admin-only">Configuración</div>
+      <div class="nav-item admin-only" onclick="showScreen('admin')" id="nav-admin">
+        <span class="ic">⚙</span> <span>Administración</span>
+      </div>
+    </nav>
+    <div class="user-badge">
+      <div class="av" id="sidebar-av">DJ</div>
+      <div class="info">
+        <div class="name" id="sidebar-name">Danilo Jácome</div>
+        <div class="role" id="sidebar-role">Administrador</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">✕</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <h1 id="topbar-title">Dashboard</h1>
+      <span class="badge-count" id="topbar-badge"></span>
+      <button class="btn-primary" onclick="openModal(null)" id="btn-nueva">+ Nueva Solicitud</button>
+    </div>
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="stat-grid" id="stat-grid"></div>
+        <div style="background:white;border-radius:8px;border:0.5px solid #E8E8E8;padding:18px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:14px;">Distribución por Estado del Pipeline</div>
+          <div id="estado-bars"></div>
+        </div>
+        <div style="background:white;border-radius:8px;border:0.5px solid #E8E8E8;padding:18px;">
+          <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:12px;">Últimas Solicitudes Ingresadas</div>
+          <div id="ultimas-list"></div>
+        </div>
+      </div>
+
+      <!-- KANBAN -->
+      <div class="screen" id="screen-kanban">
+        <div class="scroll-hint">← Desliza horizontalmente para ver todas las etapas →</div>
+        <div class="kanban-wrap">
+          <div class="kanban" id="kanban-board"></div>
+        </div>
+      </div>
+
+      <!-- LISTA -->
+      <div class="screen" id="screen-lista">
+        <div class="filter-bar">
+          <input type="text" id="search-input" placeholder="🔍 Buscar por nombre o cédula..." oninput="renderLista()">
+          <select id="filter-estado" onchange="renderLista()">
+            <option value="">Todos los estados</option>
+          </select>
+          <select id="filter-oficina" onchange="renderLista()">
+            <option value="">Todas las oficinas</option>
+          </select>
+          <select id="filter-tipo" onchange="renderLista()">
+            <option value="">Todos los productos</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Solicitante</th>
+                <th>Cédula</th>
+                <th>Producto</th>
+                <th>Monto</th>
+                <th>Oficina</th>
+                <th>Asesor</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="lista-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORTES -->
+      <div class="screen" id="screen-reportes">
+        <div class="report-header">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;color:#1A1A2E;">Exportar Datos del Sistema</div>
+            <div style="font-size:11px;color:#888;margin-top:3px;">Descarga el reporte completo de solicitudes en formato Excel/CSV (UTF-8 con BOM)</div>
+          </div>
+          <button class="btn-export" onclick="exportCSV()">↓ Descargar Excel/CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nombres</th><th>Cédula</th><th>Producto</th>
+                <th>Monto</th><th>Estado</th><th>Oficina</th><th>Asesor</th>
+                <th>Comentario</th><th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="reporte-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="screen" id="screen-admin">
+        <div class="admin-section">
+          <div class="admin-section-head">
+            Usuarios del Sistema
+            <span style="font-size:10px;color:#888;font-weight:400;">Configuración de roles y permisos</span>
+          </div>
+          <div class="admin-section-body">
+            <table style="width:100%">
+              <thead>
+                <tr>
+                  <th>Nombre</th><th>Usuario</th><th>Rol</th><th>Oficina</th><th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-head">Parámetros del Sistema</div>
+          <div class="admin-section-body" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group"><label>Monto mínimo (USD)</label><input type="number" value="500"></div>
+            <div class="form-group"><label>Monto máximo MIC24 (USD)</label><input type="number" value="25000"></div>
+            <div class="form-group"><label>Monto máximo CrediROL (USD)</label><input type="number" value="15000"></div>
+            <div class="form-group"><label>Plazo máximo (meses)</label><input type="number" value="84"></div>
+          </div>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-head" style="background:#FFEBEE;color:#B71C1C;">Zona de Peligro</div>
+          <div class="admin-section-body">
+            <p style="font-size:12px;color:#666;margin-bottom:12px;">Estas acciones son irreversibles. Asegúrese de exportar los datos antes de continuar.</p>
+            <button class="btn-danger" onclick="resetDatos()">⚠ Reiniciar todos los datos al estado inicial</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA / EDITAR -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Nueva Solicitud de Crédito</h3>
+      <span class="close-btn" onclick="closeModal()">×</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres Completos<span class="req">*</span></label>
+          <input type="text" id="f-nombres" placeholder="Apellido Apellido Nombre">
+        </div>
+        <div class="form-group">
+          <label>Número de Cédula<span class="req">*</span></label>
+          <input type="text" id="f-cedula" placeholder="1700000000" maxlength="10">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Crédito / Producto<span class="req">*</span></label>
+          <select id="f-tipo">
+            <option value="">Seleccione...</option>
+            <option>MIC24</option>
+            <option>CrediROL</option>
+            <option>Micro Crédito Empresarial</option>
+            <option>Crédito Agrícola</option>
+            <option>Consumo Ordinario</option>
+            <option>Vivienda</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Monto Solicitado USD<span class="req">*</span></label>
+          <input type="number" id="f-monto" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Oficina de Origen<span class="req">*</span></label>
+          <select id="f-oficina">
+            <option value="">Seleccione...</option>
+            <option>Matriz Cotocollao</option>
+            <option>Agencia Norte</option>
+            <option>Agencia Sur</option>
+            <option>Agencia Centro</option>
+            <option>Agencia Valle</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Oficial / Asesor<span class="req">*</span></label>
+          <select id="f-asesor">
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado / Pipeline<span class="req">*</span></label>
+          <select id="f-estado">
+            <option value="Prospecto">Prospecto</option>
+            <option value="Solicitud">Solicitud</option>
+            <option value="Validación">Validación</option>
+            <option value="Verificación">Verificación</option>
+            <option value="Revisión de Fábrica">Revisión de Fábrica</option>
+            <option value="Devuelto">Devuelto</option>
+            <option value="Aprobación">Aprobación</option>
+            <option value="Rechazado">Rechazado</option>
+            <option value="Desembolso">Desembolso</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plazo (meses)</label>
+          <input type="number" id="f-plazo" placeholder="12">
+        </div>
+        <div class="form-group full">
+          <label>Comentarios / Observaciones</label>
+          <textarea id="f-comentario" rows="3" placeholder="Ingrese observaciones, motivo de devolución, condiciones especiales, etc."></textarea>
+        </div>
+      </div>
+      <div class="historial" id="historial-section" style="display:none;">
+        <h4>Historial de Cambios de Estado</h4>
+        <div id="historial-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="left-actions">
+        <button class="btn-danger" id="btn-eliminar" onclick="eliminarOperacion()" style="display:none;">Eliminar</button>
+      </div>
+      <div class="right-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn-primary2" onclick="saveOperacion()">Guardar Operación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container"></div>
+
+<script>
+/* ============================================================
+   CRM Cooperativa Cotocollao - Persistencia en localStorage
+   ============================================================ */
+
+const STORAGE_KEYS = {
+  solicitudes: 'cotocollao_solicitudes',
+  nextId: 'cotocollao_nextId',
+  user: 'cotocollao_user',
+  initialized: 'cotocollao_initialized'
+};
+
+const ESTADOS = [
+  {key:'Prospecto',cls:'s-prospecto',dot:'#3949AB'},
+  {key:'Solicitud',cls:'s-solicitud',dot:'#1565C0'},
+  {key:'Validación',cls:'s-validacion',dot:'#E65100'},
+  {key:'Verificación',cls:'s-verificacion',dot:'#BF360C'},
+  {key:'Revisión de Fábrica',cls:'s-fabrica',dot:'#6A1B9A'},
+  {key:'Devuelto',cls:'s-devuelto',dot:'#880E4F'},
+  {key:'Aprobación',cls:'s-aprobacion',dot:'#2E7D32'},
+  {key:'Rechazado',cls:'s-rechazado',dot:'#B71C1C'},
+  {key:'Desembolso',cls:'s-desembolso',dot:'#1B5E20'},
+];
+
+const USUARIOS = [
+  {nombre:'Danilo Jácome',usuario:'danilo.jacome',rol:'Administrador',oficina:'Matriz Cotocollao',estado:'Activo'},
+  {nombre:'María Lozada',usuario:'maria.lozada',rol:'Jefe de Agencia',oficina:'Agencia Norte',estado:'Activo'},
+  {nombre:'Carlos Vega',usuario:'carlos.vega',rol:'Asesor de Crédito',oficina:'Matriz Cotocollao',estado:'Activo'},
+  {nombre:'Ana Morales',usuario:'ana.morales',rol:'Asesor de Crédito',oficina:'Agencia Sur',estado:'Activo'},
+  {nombre:'Pedro Alvarado',usuario:'pedro.alvarado',rol:'Asesor de Crédito',oficina:'Agencia Norte',estado:'Activo'},
+  {nombre:'Lucía Pazmiño',usuario:'lucia.pazmino',rol:'Asesor de Crédito',oficina:'Agencia Centro',estado:'Activo'},
+];
+
+const SEED_SOLICITUDES = [
+  {id:1,nombres:'Ramírez Torres Manuel',cedula:'1712345678',tipo:'MIC24',monto:8500,oficina:'Matriz Cotocollao',asesor:'Carlos Vega',estado:'Aprobación',plazo:36,comentario:'Documentación completa. Aprobado por comité.',fecha:'2025-04-22',historial:[{estado:'Prospecto',fecha:'2025-04-15',usuario:'Carlos Vega'},{estado:'Solicitud',fecha:'2025-04-17',usuario:'Carlos Vega'},{estado:'Validación',fecha:'2025-04-19',usuario:'Carlos Vega'},{estado:'Aprobación',fecha:'2025-04-22',usuario:'Carlos Vega'}]},
+  {id:2,nombres:'González Ríos Patricia',cedula:'1798765432',tipo:'CrediROL',monto:5000,oficina:'Agencia Norte',asesor:'Pedro Alvarado',estado:'Verificación',plazo:24,comentario:'En proceso de verificación de rol.',fecha:'2025-04-21',historial:[{estado:'Prospecto',fecha:'2025-04-18',usuario:'Pedro Alvarado'},{estado:'Solicitud',fecha:'2025-04-20',usuario:'Pedro Alvarado'},{estado:'Verificación',fecha:'2025-04-21',usuario:'Pedro Alvarado'}]},
+  {id:3,nombres:'Andrade Suárez Luis',cedula:'1756789012',tipo:'Micro Crédito Empresarial',monto:15000,oficina:'Agencia Sur',asesor:'Ana Morales',estado:'Revisión de Fábrica',plazo:60,comentario:'En fábrica. Requiere avalúo.',fecha:'2025-04-20',historial:[{estado:'Prospecto',fecha:'2025-04-10',usuario:'Ana Morales'},{estado:'Solicitud',fecha:'2025-04-14',usuario:'Ana Morales'},{estado:'Validación',fecha:'2025-04-17',usuario:'Ana Morales'},{estado:'Revisión de Fábrica',fecha:'2025-04-20',usuario:'Ana Morales'}]},
+  {id:4,nombres:'Herrera Cárdenas Rosa',cedula:'1734567890',tipo:'MIC24',monto:3000,oficina:'Agencia Centro',asesor:'Lucía Pazmiño',estado:'Devuelto',plazo:18,comentario:'Devuelto: falta copia de RUC actualizado.',fecha:'2025-04-19',historial:[{estado:'Prospecto',fecha:'2025-04-12',usuario:'Lucía Pazmiño'},{estado:'Solicitud',fecha:'2025-04-15',usuario:'Lucía Pazmiño'},{estado:'Devuelto',fecha:'2025-04-19',usuario:'Lucía Pazmiño'}]},
+  {id:5,nombres:'Mendoza López Jorge',cedula:'1723456789',tipo:'Crédito Agrícola',monto:12000,oficina:'Agencia Valle',asesor:'Carlos Vega',estado:'Desembolso',plazo:48,comentario:'Desembolsado. Crédito activo.',fecha:'2025-04-18',historial:[{estado:'Prospecto',fecha:'2025-04-05',usuario:'Carlos Vega'},{estado:'Desembolso',fecha:'2025-04-18',usuario:'Carlos Vega'}]},
+  {id:6,nombres:'Torres Benítez Carmen',cedula:'1745678901',tipo:'CrediROL',monto:7500,oficina:'Matriz Cotocollao',asesor:'Carlos Vega',estado:'Prospecto',plazo:36,comentario:'Primer contacto.',fecha:'2025-04-23',historial:[{estado:'Prospecto',fecha:'2025-04-23',usuario:'Carlos Vega'}]},
+  {id:7,nombres:'Salazar Mena Rodrigo',cedula:'1767890123',tipo:'MIC24',monto:4200,oficina:'Agencia Norte',asesor:'Pedro Alvarado',estado:'Solicitud',plazo:24,comentario:'Solicitud ingresada al sistema.',fecha:'2025-04-23',historial:[{estado:'Prospecto',fecha:'2025-04-20',usuario:'Pedro Alvarado'},{estado:'Solicitud',fecha:'2025-04-23',usuario:'Pedro Alvarado'}]},
+  {id:8,nombres:'Vásquez Ortiz Diana',cedula:'1789012345',tipo:'Consumo Ordinario',monto:2500,oficina:'Agencia Sur',asesor:'Ana Morales',estado:'Rechazado',plazo:12,comentario:'Rechazado: historial negativo en buró.',fecha:'2025-04-17',historial:[{estado:'Prospecto',fecha:'2025-04-14',usuario:'Ana Morales'},{estado:'Rechazado',fecha:'2025-04-17',usuario:'Ana Morales'}]},
+];
+
+let SOLICITUDES = [];
+let nextId = 9;
+let currentUser = null;
+let currentScreen = 'dashboard';
+
+/* ----------- PERSISTENCIA ----------- */
+
+function loadData() {
+  try {
+    const initialized = localStorage.getItem(STORAGE_KEYS.initialized);
+    if (!initialized) {
+      // Primera vez - cargar datos semilla
+      SOLICITUDES = JSON.parse(JSON.stringify(SEED_SOLICITUDES));
+      nextId = 9;
+      saveData();
+      localStorage.setItem(STORAGE_KEYS.initialized, '1');
+    } else {
+      const stored = localStorage.getItem(STORAGE_KEYS.solicitudes);
+      SOLICITUDES = stored ? JSON.parse(stored) : [];
+      nextId = parseInt(localStorage.getItem(STORAGE_KEYS.nextId)) || 1;
+    }
+  } catch (e) {
+    console.error('Error cargando datos:', e);
+    SOLICITUDES = JSON.parse(JSON.stringify(SEED_SOLICITUDES));
+    nextId = 9;
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.solicitudes, JSON.stringify(SOLICITUDES));
+    localStorage.setItem(STORAGE_KEYS.nextId, String(nextId));
+  } catch (e) {
+    showToast('Error al guardar datos: ' + e.message, 'error');
+  }
+}
+
+function loadUser() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.user);
+    if (stored) {
+      currentUser = JSON.parse(stored);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function saveUser() {
+  if (currentUser) {
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(currentUser));
+  }
+}
+
+function resetDatos() {
+  if (!confirm('¿Está seguro de reiniciar todos los datos? Esta acción no se puede deshacer.')) return;
+  if (!confirm('CONFIRMACIÓN FINAL: Se perderán todas las solicitudes ingresadas. ¿Continuar?')) return;
+  localStorage.removeItem(STORAGE_KEYS.solicitudes);
+  localStorage.removeItem(STORAGE_KEYS.nextId);
+  localStorage.removeItem(STORAGE_KEYS.initialized);
+  loadData();
+  showToast('Datos reiniciados al estado original', 'success');
+  showScreen(currentScreen);
+}
+
+/* ----------- TOASTS ----------- */
+
+function showToast(msg, type = '') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* ----------- LOGIN ----------- */
+
+function doLogin() {
+  const userInput = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const rol = document.getElementById('login-role').value;
+
+  if (!userInput || !pass) {
+    showToast('Ingrese usuario y contraseña', 'error');
+    return;
+  }
+
+  const roles = {admin:'Administrador',asesor:'Asesor de Crédito',jefe:'Jefe de Agencia'};
+  const parts = userInput.split('.');
+  const nombre = parts.map(p => p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+  const av = parts.map(p => p.charAt(0).toUpperCase()).join('').slice(0,2);
+
+  currentUser = {nombre, rol, av, rolLabel: roles[rol], usuario: userInput};
+  saveUser();
+  initApp();
+}
+
+function doLogout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  localStorage.removeItem(STORAGE_KEYS.user);
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('screen-login').classList.add('active');
+}
+
+function initApp() {
+  document.getElementById('sidebar-name').textContent = currentUser.nombre;
+  document.getElementById('sidebar-role').textContent = currentUser.rolLabel;
+  document.getElementById('sidebar-av').textContent = currentUser.av;
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('app').style.display = 'flex';
+  const adminEls = document.querySelectorAll('.admin-only');
+  adminEls.forEach(el => el.style.display = currentUser.rol === 'admin' ? '' : 'none');
+  populateAsesores();
+  showScreen('dashboard');
+}
+
+function populateAsesores() {
+  const sel = document.getElementById('f-asesor');
+  sel.innerHTML = '<option value="">Seleccione...</option>';
+  USUARIOS.filter(u => u.rol === 'Asesor de Crédito').forEach(u => {
+    const o = document.createElement('option');
+    o.value = u.nombre;
+    o.textContent = u.nombre;
+    sel.appendChild(o);
+  });
+}
+
+/* ----------- HELPERS ----------- */
+
+function getEstadoCls(e) { return (ESTADOS.find(s=>s.key===e)||{cls:'s-prospecto'}).cls; }
+function getEstadoDot(e) { return (ESTADOS.find(s=>s.key===e)||{dot:'#888'}).dot; }
+function fmtMoney(n) { return '$' + (Number(n)||0).toLocaleString('es-EC',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+
+/* ----------- NAVEGACIÓN ----------- */
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const ni = document.getElementById('nav-'+name);
+  if(ni) ni.classList.add('active');
+  currentScreen = name;
+  const titles = {dashboard:'Dashboard General',kanban:'Pipeline de Solicitudes',lista:'Listado de Solicitudes',reportes:'Reportes y Exportación',admin:'Administración del Sistema'};
+  document.getElementById('topbar-title').textContent = titles[name]||name;
+  if(name==='dashboard') renderDashboard();
+  else if(name==='kanban') renderKanban();
+  else if(name==='lista') renderLista();
+  else if(name==='reportes') renderReporte();
+  else if(name==='admin') renderAdmin();
+  const badge = {dashboard:'',kanban:SOLICITUDES.length+' operaciones',lista:SOLICITUDES.length+' registros',reportes:SOLICITUDES.length+' filas',admin:''};
+  document.getElementById('topbar-badge').textContent = badge[name]||'';
+}
+
+/* ----------- DASHBOARD ----------- */
+
+function renderDashboard() {
+  const total = SOLICITUDES.length;
+  const desembolsos = SOLICITUDES.filter(s=>s.estado==='Desembolso').length;
+  const montoTotal = SOLICITUDES.filter(s=>s.estado==='Desembolso').reduce((a,b)=>a+(Number(b.monto)||0),0);
+  const rechazados = SOLICITUDES.filter(s=>s.estado==='Rechazado').length;
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card orange"><div class="label">Total Solicitudes</div><div class="value">${total}</div><div class="sub">operaciones activas</div></div>
+    <div class="stat-card green"><div class="label">Desembolsados</div><div class="value">${desembolsos}</div><div class="sub">este período</div></div>
+    <div class="stat-card"><div class="label">Cartera Colocada</div><div class="value">${fmtMoney(montoTotal)}</div><div class="sub">USD acumulado</div></div>
+    <div class="stat-card red"><div class="label">Rechazados</div><div class="value">${rechazados}</div><div class="sub">requieren revisión</div></div>
+  `;
+  const counts = {};
+  ESTADOS.forEach(e => counts[e.key]=0);
+  SOLICITUDES.forEach(s => { if(counts[s.estado]!==undefined) counts[s.estado]++; });
+  document.getElementById('estado-bars').innerHTML = ESTADOS.map(e => {
+    const pct = total ? Math.round(counts[e.key]/total*100) : 0;
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="color:#444;font-weight:500;">${e.key}</span>
+        <span style="color:#888;">${counts[e.key]} (${pct}%)</span>
+      </div>
+      <div style="height:7px;background:#F0EEE8;border-radius:4px;">
+        <div style="height:7px;background:${e.dot};border-radius:4px;width:${pct}%;transition:width 0.3s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+  const recientes = [...SOLICITUDES].sort((a,b)=>b.id-a.id).slice(0,6);
+  if (recientes.length === 0) {
+    document.getElementById('ultimas-list').innerHTML = '<div class="empty-state">No hay solicitudes registradas. Use "+ Nueva Solicitud" para crear la primera.</div>';
+  } else {
+    document.getElementById('ultimas-list').innerHTML = recientes.map(s => `
+      <div style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid #F0F0F0;gap:12px;cursor:pointer;" onclick="openModal(${s.id})">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#1A1A2E;">${s.nombres}</div>
+          <div style="font-size:11px;color:#888;">${s.tipo} · ${s.asesor}</div>
+        </div>
+        <div style="font-size:13px;color:var(--cot-orange);font-weight:600;">${fmtMoney(s.monto)}</div>
+        <span class="status-pill ${getEstadoCls(s.estado)}">${s.estado}</span>
+      </div>
+    `).join('');
+  }
+}
+
+/* ----------- KANBAN ----------- */
+
+function renderKanban() {
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = ESTADOS.map(e => {
+    const cards = SOLICITUDES.filter(s=>s.estado===e.key);
+    return `<div class="kol">
+      <div class="kol-head">
+        <div class="dot" style="background:${e.dot};"></div>
+        <div class="kol-title">${e.key}</div>
+        <div class="kol-count">${cards.length}</div>
+      </div>
+      ${cards.length === 0 ? '<div style="font-size:11px;color:#AAA;text-align:center;padding:20px 0;">Sin operaciones</div>' : cards.map(s => {
+        const partes = s.nombres.split(' ');
+        const nombreCorto = partes.slice(0,2).join(' ');
+        return `<div class="kcard" onclick="openModal(${s.id})">
+          <div class="kc-name">${nombreCorto}</div>
+          <div class="kc-type">${s.tipo}</div>
+          <div class="kc-amount">${fmtMoney(s.monto)}</div>
+          <div class="kc-asesor">${s.asesor.split(' ')[0]} · ${s.oficina.split(' ').slice(-1)[0]}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* ----------- LISTA ----------- */
+
+let listaFiltersInitialized = false;
+
+function initListaFilters() {
+  if (listaFiltersInitialized) return;
+  const estadoSel = document.getElementById('filter-estado');
+  ESTADOS.forEach(e=>{
+    const o=document.createElement('option');
+    o.value=e.key; o.textContent=e.key;
+    estadoSel.appendChild(o);
+  });
+  const offs = ['Matriz Cotocollao','Agencia Norte','Agencia Sur','Agencia Centro','Agencia Valle'];
+  const ofSel = document.getElementById('filter-oficina');
+  offs.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;ofSel.appendChild(op);});
+  const tipos = ['MIC24','CrediROL','Micro Crédito Empresarial','Crédito Agrícola','Consumo Ordinario','Vivienda'];
+  const tiSel = document.getElementById('filter-tipo');
+  tipos.forEach(t=>{const op=document.createElement('option');op.value=t;op.textContent=t;tiSel.appendChild(op);});
+  listaFiltersInitialized = true;
+}
+
+function renderLista() {
+  initListaFilters();
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const fe = document.getElementById('filter-estado').value;
+  const fo = document.getElementById('filter-oficina').value;
+  const ft = document.getElementById('filter-tipo').value;
+  let filtered = SOLICITUDES.filter(s => {
+    if(q && !s.nombres.toLowerCase().includes(q) && !s.cedula.includes(q)) return false;
+    if(fe && s.estado!==fe) return false;
+    if(fo && s.oficina!==fo) return false;
+    if(ft && s.tipo!==ft) return false;
+    return true;
+  });
+  if (filtered.length === 0) {
+    document.getElementById('lista-tbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#AAA;">No se encontraron solicitudes con los filtros aplicados.</td></tr>';
+    return;
+  }
+  document.getElementById('lista-tbody').innerHTML = filtered.map(s => `
+    <tr onclick="openModal(${s.id})">
+      <td><strong>${s.nombres}</strong></td>
+      <td>${s.cedula}</td>
+      <td>${s.tipo}</td>
+      <td>${fmtMoney(s.monto)}</td>
+      <td>${s.oficina}</td>
+      <td>${s.asesor}</td>
+      <td><span class="status-pill ${getEstadoCls(s.estado)}">${s.estado}</span></td>
+      <td>${s.fecha}</td>
+      <td><button onclick="event.stopPropagation();openModal(${s.id})" style="padding:5px 12px;background:#FFF0E6;color:var(--cot-orange);border:0.5px solid var(--cot-orange-mid);border-radius:4px;font-size:11px;cursor:pointer;font-weight:600;">Editar</button></td>
+    </tr>
+  `).join('');
+}
+
+/* ----------- REPORTE ----------- */
+
+function renderReporte() {
+  if (SOLICITUDES.length === 0) {
+    document.getElementById('reporte-tbody').innerHTML = '<tr><td colspan="10" class="empty-state">No hay datos para reportar.</td></tr>';
+    return;
+  }
+  document.getElementById('reporte-tbody').innerHTML = SOLICITUDES.map((s,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${s.nombres}</td>
+      <td>${s.cedula}</td>
+      <td>${s.tipo}</td>
+      <td>${fmtMoney(s.monto)}</td>
+      <td><span class="status-pill ${getEstadoCls(s.estado)}">${s.estado}</span></td>
+      <td>${s.oficina}</td>
+      <td>${s.asesor}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(s.comentario||'').replace(/"/g,'&quot;')}">${s.comentario||''}</td>
+      <td>${s.fecha}</td>
+    </tr>
+  `).join('');
+}
+
+/* ----------- ADMIN ----------- */
+
+function renderAdmin() {
+  document.getElementById('users-tbody').innerHTML = USUARIOS.map(u => `
+    <tr>
+      <td><strong>${u.nombre}</strong></td>
+      <td>${u.usuario}</td>
+      <td><span class="status-pill s-aprobacion">${u.rol}</span></td>
+      <td>${u.oficina}</td>
+      <td><span class="status-pill s-desembolso">${u.estado}</span></td>
+    </tr>
+  `).join('');
+}
+
+/* ----------- MODAL ----------- */
+
+function openModal(id) {
+  if(id) {
+    const s = SOLICITUDES.find(x=>x.id===id);
+    if(!s) return;
+    document.getElementById('modal-title').textContent = 'Actualizar Solicitud #'+id;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('f-nombres').value = s.nombres;
+    document.getElementById('f-cedula').value = s.cedula;
+    document.getElementById('f-tipo').value = s.tipo;
+    document.getElementById('f-monto').value = s.monto;
+    document.getElementById('f-oficina').value = s.oficina;
+    document.getElementById('f-asesor').value = s.asesor;
+    document.getElementById('f-estado').value = s.estado;
+    document.getElementById('f-plazo').value = s.plazo||'';
+    document.getElementById('f-comentario').value = s.comentario||'';
+    const hs = document.getElementById('historial-section');
+    hs.style.display = 'block';
+    document.getElementById('historial-list').innerHTML = (s.historial||[]).map(h => `
+      <div class="hist-item">
+        <div class="hist-dot"></div>
+        <div>
+          <div class="hist-text">Estado cambiado a <strong>${h.estado}</strong> por ${h.usuario}</div>
+          <div class="hist-date">${h.fecha}</div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('btn-eliminar').style.display = currentUser.rol === 'admin' ? '' : 'none';
+  } else {
+    document.getElementById('modal-title').textContent = 'Nueva Solicitud de Crédito';
+    document.getElementById('edit-id').value = '';
+    ['nombres','cedula','tipo','monto','oficina','plazo','comentario'].forEach(f => {
+      const el = document.getElementById('f-'+f);
+      if(el) el.value = '';
+    });
+    document.getElementById('f-asesor').value = '';
+    document.getElementById('f-oficina').value = '';
+    document.getElementById('f-estado').value = 'Prospecto';
+    document.getElementById('historial-section').style.display = 'none';
+    document.getElementById('btn-eliminar').style.display = 'none';
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function saveOperacion() {
+  const nombres = document.getElementById('f-nombres').value.trim();
+  const cedula = document.getElementById('f-cedula').value.trim();
+  const tipo = document.getElementById('f-tipo').value;
+  const monto = parseFloat(document.getElementById('f-monto').value)||0;
+  const oficina = document.getElementById('f-oficina').value;
+  const asesor = document.getElementById('f-asesor').value;
+  const estado = document.getElementById('f-estado').value;
+
+  if(!nombres||!cedula||!tipo||!monto||!oficina||!asesor) {
+    showToast('Complete todos los campos obligatorios marcados con *', 'error');
+    return;
+  }
+  if(cedula.length !== 10 || !/^\d+$/.test(cedula)) {
+    showToast('La cédula debe tener exactamente 10 dígitos numéricos', 'error');
+    return;
+  }
+  if(monto <= 0) {
+    showToast('El monto debe ser mayor a cero', 'error');
+    return;
+  }
+
+  const editId = parseInt(document.getElementById('edit-id').value)||null;
+  const today = new Date().toISOString().split('T')[0];
+
+  if(editId) {
+    const idx = SOLICITUDES.findIndex(s=>s.id===editId);
+    const old = SOLICITUDES[idx];
+    const newHist = [...(old.historial||[])];
+    if(old.estado !== estado) newHist.push({estado,fecha:today,usuario:currentUser.nombre});
+    SOLICITUDES[idx] = {...old, nombres, cedula, tipo, monto, oficina, asesor, estado,
+      plazo:parseInt(document.getElementById('f-plazo').value)||old.plazo,
+      comentario:document.getElementById('f-comentario').value,
+      historial:newHist
+    };
+    showToast('Solicitud #'+editId+' actualizada correctamente', 'success');
+  } else {
+    SOLICITUDES.push({
+      id:nextId++, nombres, cedula, tipo, monto, oficina, asesor, estado,
+      plazo:parseInt(document.getElementById('f-plazo').value)||12,
+      comentario:document.getElementById('f-comentario').value,
+      fecha:today,
+      historial:[{estado,fecha:today,usuario:currentUser.nombre}]
+    });
+    showToast('Nueva solicitud creada exitosamente', 'success');
+  }
+  saveData();
+  closeModal();
+  showScreen(currentScreen);
+}
+
+function eliminarOperacion() {
+  const editId = parseInt(document.getElementById('edit-id').value)||null;
+  if(!editId) return;
+  if(!confirm('¿Eliminar permanentemente la solicitud #'+editId+'? Esta acción no se puede deshacer.')) return;
+  SOLICITUDES = SOLICITUDES.filter(s => s.id !== editId);
+  saveData();
+  closeModal();
+  showToast('Solicitud eliminada', 'success');
+  showScreen(currentScreen);
+}
+
+/* ----------- EXPORTACIÓN ----------- */
+
+function exportCSV() {
+  if (SOLICITUDES.length === 0) {
+    showToast('No hay datos para exportar', 'error');
+    return;
+  }
+  const headers = ['#','Nombres','Cedula','Producto','Monto USD','Estado','Oficina','Asesor','Plazo','Comentario','Fecha','Historial'];
+  const rows = SOLICITUDES.map((s,i) => [
+    i+1, s.nombres, s.cedula, s.tipo, s.monto, s.estado, s.oficina, s.asesor,
+    s.plazo||'', s.comentario||'', s.fecha,
+    (s.historial||[]).map(h => `${h.fecha}: ${h.estado} (${h.usuario})`).join(' | ')
+  ]);
+  const csv = [headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Solicitudes_Cotocollao_'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Reporte descargado: '+SOLICITUDES.length+' registros', 'success');
+}
+
+/* ----------- INICIALIZACIÓN ----------- */
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if(e.target===this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+  if(e.key === 'Escape') closeModal();
+});
+
+// Cargar datos y verificar si hay sesión activa
+loadData();
+if (loadUser()) {
+  initApp();
+}
+</script>
+</body>
+</html>
